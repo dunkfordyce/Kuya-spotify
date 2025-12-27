@@ -14,26 +14,55 @@ let genreMap = new Map();
 let authSection, loadingSection, resultsSection, errorSection;
 let loginBtn, logoutBtn, refreshBtn, retryBtn;
 let searchInput, genreContainer, totalSongsEl, totalGenresEl;
-let loadingText, progressText, errorText;
+let loadingText, progressText, errorText, debugLog;
+
+// Debug logging function
+function log(message) {
+    const timestamp = new Date().toLocaleTimeString();
+    const logMessage = `[${timestamp}] ${message}\n`;
+    console.log(message);
+    if (debugLog) {
+        debugLog.value += logMessage;
+        debugLog.scrollTop = debugLog.scrollHeight;
+    }
+}
+
+// Global error handler
+window.addEventListener('error', (event) => {
+    log(`ERROR: ${event.message} at ${event.filename}:${event.lineno}:${event.colno}`);
+    log(`Stack: ${event.error?.stack || 'No stack trace'}`);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    log(`UNHANDLED REJECTION: ${event.reason}`);
+});
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize DOM elements
-    authSection = document.getElementById('auth-section');
-    loadingSection = document.getElementById('loading-section');
-    resultsSection = document.getElementById('results-section');
-    errorSection = document.getElementById('error-section');
-    loginBtn = document.getElementById('login-btn');
-    logoutBtn = document.getElementById('logout-btn');
-    refreshBtn = document.getElementById('refresh-btn');
-    retryBtn = document.getElementById('retry-btn');
-    searchInput = document.getElementById('search-input');
-    genreContainer = document.getElementById('genre-container');
-    totalSongsEl = document.getElementById('total-songs');
-    totalGenresEl = document.getElementById('total-genres');
-    loadingText = document.getElementById('loading-text');
-    progressText = document.getElementById('progress-text');
-    errorText = document.getElementById('error-text');
+    try {
+        log('DOMContentLoaded event fired');
+
+        // Initialize DOM elements
+        authSection = document.getElementById('auth-section');
+        loadingSection = document.getElementById('loading-section');
+        resultsSection = document.getElementById('results-section');
+        errorSection = document.getElementById('error-section');
+        loginBtn = document.getElementById('login-btn');
+        logoutBtn = document.getElementById('logout-btn');
+        refreshBtn = document.getElementById('refresh-btn');
+        retryBtn = document.getElementById('retry-btn');
+        searchInput = document.getElementById('search-input');
+        genreContainer = document.getElementById('genre-container');
+        totalSongsEl = document.getElementById('total-songs');
+        totalGenresEl = document.getElementById('total-genres');
+        loadingText = document.getElementById('loading-text');
+        progressText = document.getElementById('progress-text');
+        errorText = document.getElementById('error-text');
+        debugLog = document.getElementById('debug-log');
+
+        log('DOM elements initialized');
+        log(`loginBtn found: ${loginBtn !== null}`);
+        log(`debugLog found: ${debugLog !== null}`);
 
     // Check for access token in URL hash
     const hash = window.location.hash.substring(1);
@@ -57,29 +86,41 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Event listeners
-    loginBtn.addEventListener('click', login);
-    logoutBtn.addEventListener('click', logout);
-    refreshBtn.addEventListener('click', refresh);
-    retryBtn.addEventListener('click', retry);
-    searchInput.addEventListener('input', handleSearch);
+        // Event listeners
+        log('Adding event listeners...');
+        loginBtn.addEventListener('click', login);
+        logoutBtn.addEventListener('click', logout);
+        refreshBtn.addEventListener('click', refresh);
+        retryBtn.addEventListener('click', retry);
+        searchInput.addEventListener('input', handleSearch);
+        log('Event listeners added successfully');
+        log('App initialized successfully');
+    } catch (error) {
+        log(`INITIALIZATION ERROR: ${error.message}`);
+        log(`Stack: ${error.stack}`);
+    }
 });
 
 // Authentication
 function login() {
-    console.log('Login button clicked');
-    console.log('CLIENT_ID:', CLIENT_ID);
-    console.log('REDIRECT_URI:', REDIRECT_URI);
+    try {
+        log('Login button clicked!');
+        log(`CLIENT_ID: ${CLIENT_ID}`);
+        log(`REDIRECT_URI: ${REDIRECT_URI}`);
 
-    if (CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
-        showError('Please configure your Spotify Client ID in app.js. See README for instructions.');
-        return;
+        if (CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
+            showError('Please configure your Spotify Client ID in app.js. See README for instructions.');
+            return;
+        }
+
+        const authUrl = `${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES)}&response_type=token&show_dialog=true`;
+        log(`Auth URL: ${authUrl}`);
+        log('Redirecting to Spotify...');
+        window.location.href = authUrl;
+    } catch (error) {
+        log(`LOGIN ERROR: ${error.message}`);
+        log(`Stack: ${error.stack}`);
     }
-
-    const authUrl = `${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES)}&response_type=token&show_dialog=true`;
-    console.log('Auth URL:', authUrl);
-    console.log('Redirecting to Spotify...');
-    window.location.href = authUrl;
 }
 
 function logout() {
