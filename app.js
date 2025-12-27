@@ -12,7 +12,7 @@ let genreMap = new Map();
 
 // DOM Elements (will be initialized after DOM loads)
 let authSection, loadingSection, resultsSection, errorSection;
-let loginBtn, logoutBtn, refreshBtn, retryBtn;
+let loginBtn, logoutBtn, refreshBtn, retryBtn, clearLogBtn;
 let searchInput, genreContainer, totalSongsEl, totalGenresEl;
 let loadingText, progressText, errorText, debugLog;
 
@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn = document.getElementById('logout-btn');
         refreshBtn = document.getElementById('refresh-btn');
         retryBtn = document.getElementById('retry-btn');
+        clearLogBtn = document.getElementById('clear-log-btn');
         searchInput = document.getElementById('search-input');
         genreContainer = document.getElementById('genre-container');
         totalSongsEl = document.getElementById('total-songs');
@@ -108,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.addEventListener('click', logout);
         refreshBtn.addEventListener('click', refresh);
         retryBtn.addEventListener('click', retry);
+        clearLogBtn.addEventListener('click', clearLog);
         searchInput.addEventListener('input', handleSearch);
         log('Event listeners added successfully');
         log('App initialized successfully');
@@ -162,6 +164,14 @@ function refresh() {
 
 function retry() {
     showSection('auth');
+}
+
+function clearLog() {
+    localStorage.removeItem('debug_logs');
+    if (debugLog) {
+        debugLog.value = '';
+    }
+    log('Debug log cleared');
 }
 
 // API Calls
