@@ -304,17 +304,26 @@ async function fetchAllLikedSongs() {
 
     while (url) {
         updateProgress(`Fetching songs... (${allTracks.length} so far)`);
+        log(`Fetching page at offset ${offset}...`);
 
         try {
             const data = await makeSpotifyRequest(url);
             allTracks = allTracks.concat(data.items);
+            log(`Got ${data.items.length} songs, total: ${allTracks.length}, has more: ${data.next !== null}`);
             url = data.next;
             offset += 50;
+
+            // Add small delay to avoid rate limiting
+            if (url) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
         } catch (error) {
+            log(`ERROR fetching songs at offset ${offset}: ${error.message}`);
             throw error;
         }
     }
 
+    log(`Finished fetching all songs. Total: ${allTracks.length}`);
     return allTracks;
 }
 
@@ -516,12 +525,12 @@ function createGenreSection(genre, songs) {
         const songCard = document.createElement('div');
         songCard.className = 'song-card';
         songCard.innerHTML = `
-            <img src="${song.image || 'https://via.placeholder.com/60'}" alt="${song.name}" class="song-image">
+            <img src="${song.image || 'https://via.placeholder.com/40'}" alt="${song.name}" class="song-image">
             <div class="song-info">
-                <div class="song-name">${song.name}</div>
-                <div class="song-artist">${song.artist}</div>
+                <span class="song-name">${song.name}</span>
+                <span class="song-artist">${song.artist}</span>
             </div>
-            <a href="${song.url}" target="_blank" class="song-link">Play on Spotify</a>
+            <a href="${song.url}" target="_blank" class="song-link">▶</a>
         `;
         songList.appendChild(songCard);
     });

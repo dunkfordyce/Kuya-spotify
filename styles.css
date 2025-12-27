@@ -256,7 +256,7 @@ header p {
 
 .song-list {
     display: grid;
-    gap: 15px;
+    gap: 4px;
     max-height: 600px;
     overflow-y: auto;
     padding-right: 10px;
@@ -283,22 +283,23 @@ header p {
 .song-card {
     display: flex;
     align-items: center;
-    gap: 15px;
-    padding: 15px;
+    gap: 10px;
+    padding: 8px 12px;
     background: var(--spotify-black);
-    border-radius: 10px;
-    transition: all 0.3s ease;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    min-height: 48px;
 }
 
 .song-card:hover {
     background: var(--hover-bg);
-    transform: translateX(5px);
+    transform: translateX(3px);
 }
 
 .song-image {
-    width: 60px;
-    height: 60px;
-    border-radius: 5px;
+    width: 40px;
+    height: 40px;
+    border-radius: 4px;
     object-fit: cover;
     flex-shrink: 0;
 }
@@ -306,33 +307,40 @@ header p {
 .song-info {
     flex: 1;
     min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .song-name {
-    font-weight: bold;
-    font-size: 1em;
-    margin-bottom: 5px;
+    font-weight: 600;
+    font-size: 0.95em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
 }
 
 .song-artist {
     color: var(--spotify-light-gray);
-    font-size: 0.9em;
+    font-size: 0.85em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    flex: 0 0 auto;
+    max-width: 200px;
 }
 
 .song-link {
     color: var(--spotify-green);
     text-decoration: none;
-    font-weight: bold;
-    padding: 8px 15px;
-    border-radius: 20px;
-    transition: all 0.3s ease;
+    font-size: 0.85em;
+    padding: 6px 12px;
+    border-radius: 15px;
+    transition: all 0.2s ease;
     flex-shrink: 0;
+    white-space: nowrap;
 }
 
 .song-link:hover {
@@ -380,14 +388,17 @@ footer {
         align-items: stretch;
     }
 
-    .song-card {
-        flex-direction: column;
-        text-align: center;
+    .song-artist {
+        display: none; /* Hide artist on mobile to keep single line */
     }
 
-    .song-image {
-        width: 80px;
-        height: 80px;
+    .song-name {
+        font-size: 0.9em;
+    }
+
+    .song-link {
+        font-size: 1.2em;
+        padding: 4px 8px;
     }
 }
 
