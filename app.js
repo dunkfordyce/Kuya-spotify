@@ -263,7 +263,8 @@ function logout() {
 function refresh() {
     allSongs = [];
     genreMap.clear();
-    startDataFetch();
+    log('Forcing refresh from Spotify...');
+    startDataFetch(true); // Force refresh, bypass cache
 }
 
 function retry() {
@@ -388,13 +389,44 @@ function categorizeByGenre(tracks, artistGenres) {
     return new Map([...genreMap.entries()].sort((a, b) => b[1].length - a[1].length));
 }
 
-async function startDataFetch() {
+async function startDataFetch(forceRefresh = false) {
     try {
         showSection('loading');
         sessionStorage.setItem('spotify_token', accessToken);
 
+        // Check for cached data first (unless forcing refresh)
+        if (!forceRefresh) {
+            const cachedData = localStorage.getItem('spotify_genre_data');
+            const cacheTimestamp = localStorage.getItem('spotify_cache_timestamp');
+
+            if (cachedData && cacheTimestamp) {
+                const cacheAge = Date.now() - parseInt(cacheTimestamp);
+                const oneDay = 24 * 60 * 60 * 1000; // 24 hours
+
+                // Use cache if less than 24 hours old
+                if (cacheAge < oneDay) {
+                    log('Loading from cache...');
+                    updateProgress('Loading from cache...');
+
+                    try {
+                        const { tracks, genreMapArray } = JSON.parse(cachedData);
+                        allSongs = tracks;
+                        genreMap = new Map(genreMapArray);
+
+                        log(`Loaded ${allSongs.length} songs from cache`);
+                        displayResults();
+                        showSection('results');
+                        return;
+                    } catch (e) {
+                        log('Cache load failed, fetching fresh data...');
+                    }
+                }
+            }
+        }
+
         // Fetch all liked songs
         updateProgress('Starting to fetch your liked songs...');
+        log('Fetching songs from Spotify API...');
         const tracks = await fetchAllLikedSongs();
 
         if (tracks.length === 0) {
@@ -403,9 +435,11 @@ async function startDataFetch() {
         }
 
         allSongs = tracks;
+        log(`Fetched ${allSongs.length} total songs`);
 
         // Get unique artist IDs
         const artistIds = [...new Set(tracks.map(item => item.track?.artists[0]?.id).filter(Boolean))];
+        log(`Found ${artistIds.length} unique artists`);
 
         // Fetch genres for all artists
         updateProgress('Fetching genre information...');
@@ -415,12 +449,27 @@ async function startDataFetch() {
         updateProgress('Organizing songs by genre...');
         genreMap = categorizeByGenre(tracks, artistGenres);
 
+        // Save to cache
+        log('Saving to cache...');
+        try {
+            const cacheData = {
+                tracks: allSongs,
+                genreMapArray: Array.from(genreMap.entries())
+            };
+            localStorage.setItem('spotify_genre_data', JSON.stringify(cacheData));
+            localStorage.setItem('spotify_cache_timestamp', Date.now().toString());
+            log('Data cached successfully');
+        } catch (e) {
+            log(`Cache save failed: ${e.message}`);
+        }
+
         // Display results
         displayResults();
         showSection('results');
 
     } catch (error) {
         console.error('Error:', error);
+        log(`ERROR in startDataFetch: ${error.message}`);
         showError(error.message || 'An error occurred while fetching your music. Please try again.');
     }
 }
@@ -450,7 +499,7 @@ function displayResults(filteredMap = null) {
 
 function createGenreSection(genre, songs) {
     const section = document.createElement('div');
-    section.className = 'genre-section';
+    section.className = 'genre-section collapsed'; // Start collapsed
     section.dataset.genre = genre;
 
     const header = document.createElement('div');
@@ -477,9 +526,19 @@ function createGenreSection(genre, songs) {
         songList.appendChild(songCard);
     });
 
-    // Toggle collapse on header click
+    // Toggle collapse on header click (accordion behavior)
     header.addEventListener('click', () => {
-        section.classList.toggle('collapsed');
+        const wasCollapsed = section.classList.contains('collapsed');
+
+        // Close all other sections (accordion behavior)
+        document.querySelectorAll('.genre-section').forEach(s => {
+            s.classList.add('collapsed');
+        });
+
+        // Toggle this section
+        if (wasCollapsed) {
+            section.classList.remove('collapsed');
+        }
     });
 
     section.appendChild(header);
