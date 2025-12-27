@@ -10,25 +10,31 @@ let accessToken = null;
 let allSongs = [];
 let genreMap = new Map();
 
-// DOM Elements
-const authSection = document.getElementById('auth-section');
-const loadingSection = document.getElementById('loading-section');
-const resultsSection = document.getElementById('results-section');
-const errorSection = document.getElementById('error-section');
-const loginBtn = document.getElementById('login-btn');
-const logoutBtn = document.getElementById('logout-btn');
-const refreshBtn = document.getElementById('refresh-btn');
-const retryBtn = document.getElementById('retry-btn');
-const searchInput = document.getElementById('search-input');
-const genreContainer = document.getElementById('genre-container');
-const totalSongsEl = document.getElementById('total-songs');
-const totalGenresEl = document.getElementById('total-genres');
-const loadingText = document.getElementById('loading-text');
-const progressText = document.getElementById('progress-text');
-const errorText = document.getElementById('error-text');
+// DOM Elements (will be initialized after DOM loads)
+let authSection, loadingSection, resultsSection, errorSection;
+let loginBtn, logoutBtn, refreshBtn, retryBtn;
+let searchInput, genreContainer, totalSongsEl, totalGenresEl;
+let loadingText, progressText, errorText;
 
 // Initialize app
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize DOM elements
+    authSection = document.getElementById('auth-section');
+    loadingSection = document.getElementById('loading-section');
+    resultsSection = document.getElementById('results-section');
+    errorSection = document.getElementById('error-section');
+    loginBtn = document.getElementById('login-btn');
+    logoutBtn = document.getElementById('logout-btn');
+    refreshBtn = document.getElementById('refresh-btn');
+    retryBtn = document.getElementById('retry-btn');
+    searchInput = document.getElementById('search-input');
+    genreContainer = document.getElementById('genre-container');
+    totalSongsEl = document.getElementById('total-songs');
+    totalGenresEl = document.getElementById('total-genres');
+    loadingText = document.getElementById('loading-text');
+    progressText = document.getElementById('progress-text');
+    errorText = document.getElementById('error-text');
+
     // Check for access token in URL hash
     const hash = window.location.hash.substring(1);
     const params = new URLSearchParams(hash);
