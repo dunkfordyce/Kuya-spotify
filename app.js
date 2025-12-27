@@ -55,7 +55,9 @@ function log(message) {
 }
 
 // Clear old logs on fresh load (not on redirect back)
-if (!window.location.hash && !sessionStorage.getItem('spotify_token')) {
+const urlParams = new URLSearchParams(window.location.search);
+const hasCode = urlParams.has('code');
+if (!hasCode && !window.location.hash && !sessionStorage.getItem('spotify_token') && !sessionStorage.getItem('code_verifier')) {
     localStorage.removeItem('debug_logs');
 }
 
@@ -222,8 +224,16 @@ async function exchangeCodeForToken(code) {
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Token exchange failed: ${errorData.error} - ${errorData.error_description || ''}`);
+            const errorText = await response.text();
+            log(`Token exchange failed with status ${response.status}`);
+            log(`Error response: ${errorText}`);
+            let errorData;
+            try {
+                errorData = JSON.parse(errorText);
+                throw new Error(`Token exchange failed: ${errorData.error} - ${errorData.error_description || ''}`);
+            } catch (e) {
+                throw new Error(`Token exchange failed with status ${response.status}: ${errorText}`);
+            }
         }
 
         const data = await response.json();
