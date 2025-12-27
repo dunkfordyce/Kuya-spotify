@@ -1,5 +1,5 @@
 // Spotify API Configuration
-const CLIENT_ID = 'YOUR_SPOTIFY_CLIENT_ID'; // Users need to replace this
+const CLIENT_ID = 'a466b55b1db4456b83ff93541c00d767';
 const REDIRECT_URI = window.location.origin + window.location.pathname;
 const SCOPES = 'user-library-read';
 const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
