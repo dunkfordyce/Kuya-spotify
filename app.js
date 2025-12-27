@@ -61,12 +61,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Authentication
 function login() {
+    console.log('Login button clicked');
+    console.log('CLIENT_ID:', CLIENT_ID);
+    console.log('REDIRECT_URI:', REDIRECT_URI);
+
     if (CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
         showError('Please configure your Spotify Client ID in app.js. See README for instructions.');
         return;
     }
 
     const authUrl = `${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES)}&response_type=token&show_dialog=true`;
+    console.log('Auth URL:', authUrl);
+    console.log('Redirecting to Spotify...');
     window.location.href = authUrl;
 }
 
