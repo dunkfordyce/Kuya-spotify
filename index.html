@@ -16,13 +16,6 @@
         <div id="auth-section" class="section">
             <button id="login-btn" class="btn-primary">Connect to Spotify</button>
             <p class="info-text">You'll need to authorize this app to access your liked songs</p>
-            <div style="margin-top: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                    <label for="debug-log" style="color: #1DB954;">Debug Log:</label>
-                    <button id="clear-log-btn" style="background: #535353; color: white; border: none; padding: 5px 15px; border-radius: 15px; cursor: pointer; font-size: 12px;">Clear Log</button>
-                </div>
-                <textarea id="debug-log" style="width: 100%; height: 200px; background: #282828; color: #B3B3B3; border: 1px solid #535353; border-radius: 10px; padding: 10px; font-family: monospace; font-size: 12px;" readonly></textarea>
-            </div>
         </div>
 
         <div id="loading-section" class="section hidden">
@@ -60,6 +53,15 @@
                 <p id="error-text"></p>
                 <button id="retry-btn" class="btn-primary">Try Again</button>
             </div>
+        </div>
+
+        <!-- Debug Log - Always Visible -->
+        <div style="margin-top: 30px; padding: 20px; background: rgba(40, 40, 40, 0.5); border-radius: 15px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <label for="debug-log" style="color: #1DB954; font-weight: bold;">Debug Log:</label>
+                <button id="clear-log-btn" style="background: #535353; color: white; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-size: 14px; font-weight: bold;">Clear Log</button>
+            </div>
+            <textarea id="debug-log" style="width: 100%; height: 250px; background: #191414; color: #B3B3B3; border: 1px solid #535353; border-radius: 10px; padding: 15px; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4;" readonly></textarea>
         </div>
     </div>
 
