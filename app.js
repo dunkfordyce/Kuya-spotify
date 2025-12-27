@@ -86,19 +86,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams(hash);
     const token = params.get('access_token');
 
+    log(`Checking for access token in URL...`);
+    log(`Full URL: ${window.location.href}`);
+    log(`Hash: ${window.location.hash}`);
+    log(`Parsed hash: ${hash}`);
+    log(`Token found: ${token !== null}`);
+
+    // Check for errors from Spotify
+    const error = params.get('error');
+    const errorDescription = params.get('error_description');
+    if (error) {
+        log(`SPOTIFY ERROR: ${error}`);
+        log(`Error description: ${errorDescription || 'No description'}`);
+        showError(`Spotify authorization failed: ${error} - ${errorDescription || 'Unknown error'}`);
+        return;
+    }
+
     if (token) {
+        log(`Access token received! Length: ${token.length}`);
         accessToken = token;
         // Clean URL
         window.history.replaceState({}, document.title, window.location.pathname);
         // Start fetching data
         startDataFetch();
     } else {
+        log('No token in URL, checking session storage...');
         // Check if token exists in session storage
         const storedToken = sessionStorage.getItem('spotify_token');
         if (storedToken) {
+            log(`Token found in session storage! Length: ${storedToken.length}`);
             accessToken = storedToken;
             startDataFetch();
         } else {
+            log('No stored token found, showing auth screen');
             showSection('auth');
         }
     }
