@@ -3,7 +3,29 @@ const CLIENT_ID = 'a466b55b1db4456b83ff93541c00d767';
 const REDIRECT_URI = window.location.origin + window.location.pathname;
 const SCOPES = 'user-library-read';
 const AUTH_ENDPOINT = 'https://accounts.spotify.com/authorize';
+const TOKEN_ENDPOINT = 'https://accounts.spotify.com/api/token';
 const API_BASE = 'https://api.spotify.com/v1';
+
+// PKCE helper functions
+function generateCodeVerifier() {
+    const array = new Uint8Array(32);
+    crypto.getRandomValues(array);
+    return base64URLEncode(array);
+}
+
+function base64URLEncode(array) {
+    return btoa(String.fromCharCode.apply(null, array))
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+}
+
+async function generateCodeChallenge(verifier) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(verifier);
+    const digest = await crypto.subtle.digest('SHA-256', data);
+    return base64URLEncode(new Uint8Array(digest));
+}
 
 // State management
 let accessToken = null;
@@ -48,7 +70,7 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 // Initialize app
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     try {
         log('DOMContentLoaded event fired');
 
@@ -81,36 +103,32 @@ document.addEventListener('DOMContentLoaded', () => {
         log(`loginBtn found: ${loginBtn !== null}`);
         log(`debugLog found: ${debugLog !== null}`);
 
-    // Check for access token in URL hash
-    const hash = window.location.hash.substring(1);
-    const params = new URLSearchParams(hash);
-    const token = params.get('access_token');
+    // Check for authorization code in URL (PKCE flow)
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get('code');
+    const error = urlParams.get('error');
 
-    log(`Checking for access token in URL...`);
+    log(`Checking for authorization code in URL...`);
     log(`Full URL: ${window.location.href}`);
-    log(`Hash: ${window.location.hash}`);
-    log(`Parsed hash: ${hash}`);
-    log(`Token found: ${token !== null}`);
+    log(`Code found: ${code !== null}`);
 
     // Check for errors from Spotify
-    const error = params.get('error');
-    const errorDescription = params.get('error_description');
     if (error) {
+        const errorDescription = urlParams.get('error_description');
         log(`SPOTIFY ERROR: ${error}`);
         log(`Error description: ${errorDescription || 'No description'}`);
         showError(`Spotify authorization failed: ${error} - ${errorDescription || 'Unknown error'}`);
         return;
     }
 
-    if (token) {
-        log(`Access token received! Length: ${token.length}`);
-        accessToken = token;
-        // Clean URL
+    if (code) {
+        log(`Authorization code received! Exchanging for access token...`);
+        // Clean URL first
         window.history.replaceState({}, document.title, window.location.pathname);
-        // Start fetching data
-        startDataFetch();
+        // Exchange code for token
+        await exchangeCodeForToken(code);
     } else {
-        log('No token in URL, checking session storage...');
+        log('No code in URL, checking session storage...');
         // Check if token exists in session storage
         const storedToken = sessionStorage.getItem('spotify_token');
         if (storedToken) {
@@ -140,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Authentication
-function login() {
+async function login() {
     try {
         log('Login button clicked!');
         log(`CLIENT_ID: ${CLIENT_ID}`);
@@ -153,7 +171,16 @@ function login() {
             return;
         }
 
-        const authUrl = `${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES)}&response_type=token&show_dialog=true`;
+        // Generate PKCE codes
+        log('Generating PKCE codes...');
+        const codeVerifier = generateCodeVerifier();
+        const codeChallenge = await generateCodeChallenge(codeVerifier);
+
+        // Store code verifier for later use
+        sessionStorage.setItem('code_verifier', codeVerifier);
+        log('PKCE codes generated and stored');
+
+        const authUrl = `${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES)}&response_type=code&code_challenge_method=S256&code_challenge=${codeChallenge}`;
         log(`Auth URL: ${authUrl}`);
         log('Will redirect in 2 seconds... (check the logs above)');
 
@@ -165,6 +192,53 @@ function login() {
     } catch (error) {
         log(`LOGIN ERROR: ${error.message}`);
         log(`Stack: ${error.stack}`);
+    }
+}
+
+async function exchangeCodeForToken(code) {
+    try {
+        log('Exchanging authorization code for access token...');
+        const codeVerifier = sessionStorage.getItem('code_verifier');
+
+        if (!codeVerifier) {
+            throw new Error('Code verifier not found in session storage');
+        }
+
+        const body = new URLSearchParams({
+            client_id: CLIENT_ID,
+            grant_type: 'authorization_code',
+            code: code,
+            redirect_uri: REDIRECT_URI,
+            code_verifier: codeVerifier
+        });
+
+        log('Sending token request to Spotify...');
+        const response = await fetch(TOKEN_ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded'
+            },
+            body: body
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(`Token exchange failed: ${errorData.error} - ${errorData.error_description || ''}`);
+        }
+
+        const data = await response.json();
+        log(`Access token received! Length: ${data.access_token.length}`);
+        log(`Token expires in: ${data.expires_in} seconds`);
+
+        accessToken = data.access_token;
+        sessionStorage.setItem('spotify_token', accessToken);
+        sessionStorage.removeItem('code_verifier');
+
+        // Start fetching data
+        startDataFetch();
+    } catch (error) {
+        log(`TOKEN EXCHANGE ERROR: ${error.message}`);
+        showError(`Failed to get access token: ${error.message}`);
     }
 }
 
