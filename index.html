@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Genre Sorter</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 Spotify Genre Sorter</h1>
+            <p>Organize your liked songs by genre</p>
+        </header>
+
+        <div id="auth-section" class="section">
+            <button id="login-btn" class="btn-primary">Connect to Spotify</button>
+            <p class="info-text">You'll need to authorize this app to access your liked songs</p>
+        </div>
+
+        <div id="loading-section" class="section hidden">
+            <div class="loader"></div>
+            <p id="loading-text">Loading your liked songs...</p>
+            <p id="progress-text" class="progress-text"></p>
+        </div>
+
+        <div id="results-section" class="section hidden">
+            <div class="controls">
+                <button id="logout-btn" class="btn-secondary">Logout</button>
+                <button id="refresh-btn" class="btn-secondary">Refresh</button>
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Search songs or artists...">
+                </div>
+            </div>
+
+            <div class="stats">
+                <div class="stat-card">
+                    <h3 id="total-songs">0</h3>
+                    <p>Total Songs</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="total-genres">0</h3>
+                    <p>Genres Found</p>
+                </div>
+            </div>
+
+            <div id="genre-container"></div>
+        </div>
+
+        <div id="error-section" class="section hidden">
+            <div class="error-message">
+                <h2>⚠️ Error</h2>
+                <p id="error-text"></p>
+                <button id="retry-btn" class="btn-primary">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <p>Made with ❤️ for music lovers | Not affiliated with Spotify</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
