@@ -21,10 +21,20 @@ function log(message) {
     const timestamp = new Date().toLocaleTimeString();
     const logMessage = `[${timestamp}] ${message}\n`;
     console.log(message);
+
+    // Store in localStorage for persistence
+    const existingLogs = localStorage.getItem('debug_logs') || '';
+    localStorage.setItem('debug_logs', existingLogs + logMessage);
+
     if (debugLog) {
         debugLog.value += logMessage;
         debugLog.scrollTop = debugLog.scrollHeight;
     }
+}
+
+// Clear old logs on fresh load (not on redirect back)
+if (!window.location.hash && !sessionStorage.getItem('spotify_token')) {
+    localStorage.removeItem('debug_logs');
 }
 
 // Global error handler
@@ -59,6 +69,12 @@ document.addEventListener('DOMContentLoaded', () => {
         progressText = document.getElementById('progress-text');
         errorText = document.getElementById('error-text');
         debugLog = document.getElementById('debug-log');
+
+        // Restore previous logs
+        const savedLogs = localStorage.getItem('debug_logs') || '';
+        if (debugLog && savedLogs) {
+            debugLog.value = savedLogs;
+        }
 
         log('DOM elements initialized');
         log(`loginBtn found: ${loginBtn !== null}`);
@@ -107,6 +123,8 @@ function login() {
         log('Login button clicked!');
         log(`CLIENT_ID: ${CLIENT_ID}`);
         log(`REDIRECT_URI: ${REDIRECT_URI}`);
+        log(`window.location.origin: ${window.location.origin}`);
+        log(`window.location.pathname: ${window.location.pathname}`);
 
         if (CLIENT_ID === 'YOUR_SPOTIFY_CLIENT_ID') {
             showError('Please configure your Spotify Client ID in app.js. See README for instructions.');
@@ -115,8 +133,13 @@ function login() {
 
         const authUrl = `${AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&scope=${encodeURIComponent(SCOPES)}&response_type=token&show_dialog=true`;
         log(`Auth URL: ${authUrl}`);
-        log('Redirecting to Spotify...');
-        window.location.href = authUrl;
+        log('Will redirect in 2 seconds... (check the logs above)');
+
+        // Delay redirect so user can see logs
+        setTimeout(() => {
+            log('Redirecting NOW to Spotify...');
+            window.location.href = authUrl;
+        }, 2000);
     } catch (error) {
         log(`LOGIN ERROR: ${error.message}`);
         log(`Stack: ${error.stack}`);
